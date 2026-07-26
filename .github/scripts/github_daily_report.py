@@ -4,34 +4,44 @@ GitHub Daily Report Generator — CI 版
 """
 
 import json, os, re, subprocess, urllib.request
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# 强制北京时间
+BEIJING = timezone(timedelta(hours=8))
+TODAY = datetime.now(BEIJING).strftime("%Y-%m-%d")
+WEEK_AGO = (datetime.now(BEIJING) - timedelta(days=7)).strftime("%Y-%m-%d")
+REPORT_FILE = f"GitHub_Weekly_Report_{datetime.now(BEIJING).strftime('%Y%m%d')}.md"
 
 REPO_DIR = os.getcwd()
 API_BASE = "https://api.github.com"
-TODAY = datetime.now().strftime("%Y-%m-%d")
-WEEK_AGO = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
-REPORT_FILE = f"GitHub_Weekly_Report_{datetime.now().strftime('%Y%m%d')}.md"
 FEISHU_WEBHOOK = os.environ.get("FEISHU_WEBHOOK", "")
 
 
 def log(msg):
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+    print(f"[{datetime.now(BEIJING).strftime('%H:%M:%S')}] {msg}")
 
 
 def api_get(url):
     try:
         r = subprocess.run(["curl", "-sf", url], capture_output=True, text=True, timeout=30)
-        return json.loads(r.stdout) if r.returncode == 0 and r.stdout else None
+        if r.returncode == 0 and r.stdout:
+            return json.loads(r.stdout)
+        return None
     except Exception as e:
         log(f"API 请求失败: {e}")
         return None
 
 
 def repo_info(name):
-    return api_get(f"{API_BASE}/repos/{name}")
+    """获取仓库信息，返回 dict 或 None"""
+    data = api_get(f"{API_BASE}/repos/{name}")
+    if isinstance(data, dict):
+        return data
+    return None
 
 
 def fetch_trending():
+    """获取 GitHub Trending 周榜，返回有效的 owner/repo 列表"""
     try:
         r = subprocess.run(
             ["curl", "-sfL", "https://github.com/trending?since=weekly"],
@@ -39,9 +49,16 @@ def fetch_trending():
         )
         if r.returncode != 0:
             return []
-        repos = re.findall(r'href="/([^"]+)"', r.stdout)
-        # Filter to owner/repo patterns
-        repos = [x for x in repos if "/" in x and not x.startswith("sponsors/") and not x.startswith("trending/")]
+
+        html = r.stdout
+        # 匹配 h2 标签中的 repo 链接，只匹配 owner/repo 格式
+        repos = []
+        for match in re.finditer(r'<h2[^>]*>.*?<a[^>]*href="/([a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+)"', html, re.DOTALL):
+            repo = match.group(1)
+            # 过滤掉非仓库链接
+            if not repo.startswith("sponsors/") and not repo.startswith("trending/"):
+                repos.append(repo)
+
         seen = set()
         return [x for x in repos if x not in seen and not seen.add(x)]
     except Exception as e:
@@ -49,26 +66,27 @@ def fetch_trending():
         return []
 
 
-def main():
-    log(f"开始生成报告 ({TODAY})")
+def build_report(all_time, new_week, trending):
+    """生成报告内容"""
+    lines = []
 
-    all_time = api_get(f"{API_BASE}/search/repositories?q=stars:%3E100000&sort=stars&order=desc&per_page=15")
-    new_week = api_get(f"{API_BASE}/search/repositories?q=created:%3E{WEEK_AGO}&sort=stars&order=desc&per_page=30")
-    trending = fetch_trending()
-
-    lines = [
+    # --- 标题 ---
+    lines += [
         "# GitHub 近一周项目分析报告\n",
-        f"**报告日期：** {TODAY}（数据截至当日 UTC+8）  ",
+        f"**报告日期：** {TODAY}（北京时间）  ",
         "**数据来源：** GitHub API + GitHub Trending (Weekly)",
         "",
         "---",
         "",
+    ]
+
+    # --- Part 1: 全历史 Top 10 ---
+    lines += [
         "## 第一部分：总 Star 排名前十（全历史累计）\n",
         "| # | 项目 | Stars | 语言 | 简介 |",
         "|---|------|------:|------|------|",
     ]
-
-    if all_time and "items" in all_time:
+    if isinstance(all_time, dict) and "items" in all_time:
         for i, r in enumerate(all_time["items"][:10], 1):
             n = r["full_name"]
             s = f"{r['stargazers_count']:,}"
@@ -76,6 +94,7 @@ def main():
             d = (r.get("description") or "")[:70]
             lines.append(f"| {i} | **[{n}](https://github.com/{n})** | {s} | {l} | {d} |")
 
+    # --- Part 2: 本周之星 ---
     lines += [
         "",
         "---",
@@ -85,8 +104,7 @@ def main():
         "| # | 项目 | Stars | 语言 | 简介 |",
         "|---|------|------:|------|------|",
     ]
-
-    if new_week and "items" in new_week:
+    if isinstance(new_week, dict) and "items" in new_week:
         for i, r in enumerate(new_week["items"][:15], 1):
             n = r["full_name"]
             s = f"{r['stargazers_count']:,}"
@@ -100,10 +118,9 @@ def main():
         "| # | 项目 | Stars | 语言 | 简介 |",
         "|---|------|------:|------|------|",
     ]
-
     for i, repo in enumerate(trending[:15], 1):
         info = repo_info(repo)
-        if info:
+        if isinstance(info, dict):
             s = f"{info.get('stargazers_count', 0):,}"
             l = info.get("language") or "N/A"
             d = (info.get("description") or "")[:60]
@@ -122,13 +139,26 @@ def main():
         f"*本报告由 GitHub Actions 每日自动生成，数据截止 {TODAY}。*\n",
     ]
 
-    content = "\n".join(lines)
+    return "\n".join(lines)
+
+
+def main():
+    log(f"开始生成报告 ({TODAY})")
+
+    all_time = api_get(f"{API_BASE}/search/repositories?q=stars:%3E100000&sort=stars&order=desc&per_page=15")
+    new_week = api_get(f"{API_BASE}/search/repositories?q=created:%3E{WEEK_AGO}&sort=stars&order=desc&per_page=30")
+    trending = fetch_trending()
+
+    log(f"Trending 获取到 {len(trending)} 个仓库")
+
+    content = build_report(all_time, new_week, trending)
+
     report_path = os.path.join(REPO_DIR, REPORT_FILE)
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(content)
     log(f"报告写入: {REPORT_FILE}")
 
-    # 飞书推送
+    # --- 飞书推送 ---
     if FEISHU_WEBHOOK:
         card = {
             "msg_type": "interactive",
@@ -143,7 +173,7 @@ def main():
                         "content": f"**报告已更新**\n📅 数据截止：{TODAY}\n\n👉 [查看完整报告](https://github.com/GeneElias/Notes/blob/main/{REPORT_FILE})"
                     },
                     {"tag": "hr"},
-                    {"tag": "note", "elements": [{"tag": "plain_text", "content": f"GitHub Daily Report Bot · 自动推送 · 历史报告一览"}]}
+                    {"tag": "note", "elements": [{"tag": "plain_text", "content": "GitHub Daily Report Bot · 自动推送"}]}
                 ]
             }
         }
@@ -156,8 +186,6 @@ def main():
             log(f"飞书推送失败: {e}")
     else:
         log("飞书未配置，跳过推送")
-
-    # 输出文件名供 workflow 下一步使用
 
     log("全部完成！")
 
