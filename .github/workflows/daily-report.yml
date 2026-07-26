@@ -2,7 +2,6 @@ name: 📊 Daily GitHub Report
 
 on:
   schedule:
-    # 北京时间 09:00 = UTC 01:00
     - cron: '0 1 * * *'
   workflow_dispatch:
 
@@ -22,15 +21,25 @@ jobs:
 
       - name: Commit and Push
         run: |
-          REPORT_FILE="GitHub_Weekly_Report_$(date +%Y%m%d).md"
+          # 和 Python 脚本保持一致的北京时间
+          BEIJING_DATE=$(TZ=Asia/Shanghai date +%Y%m%d)
+          REPORT_FILE="GitHub_Weekly_Report_${BEIJING_DATE}.md"
+          echo "Looking for: $REPORT_FILE"
+
           git config user.name "Report Bot"
           git config user.email "bot@users.noreply.github.com"
+
           if [ -f "$REPORT_FILE" ]; then
             git add "$REPORT_FILE"
-            git commit -m "chore: daily GitHub report ($(date +%Y-%m-%d))"
-            git push
-            echo "✅ 已新增 $REPORT_FILE"
+            if git diff --cached --quiet; then
+              echo "No changes - file already committed, skipping push"
+            else
+              git commit -m "chore: daily GitHub report ($(TZ=Asia/Shanghai date +%Y-%m-%d))"
+              git push
+              echo "✅ 已推送 $REPORT_FILE"
+            fi
           else
-            echo "报告文件未生成，跳过提交"
+            echo "Error: $REPORT_FILE not found"
+            ls -la GitHub_Weekly_Report_*.md 2>/dev/null || echo "(no report files in workspace)"
             exit 1
           fi
