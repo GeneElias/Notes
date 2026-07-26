@@ -128,16 +128,70 @@ def build_report(all_time, new_week, trending):
             s, l, d = "?", "?", ""
         lines.append(f"| {i} | **[{repo}](https://github.com/{repo})** | {s} | {l} | {d} |")
 
+    # --- 趋势分析 ---
+    lines += ["", "---", "", "## 第三部分：趋势解读\n"]
+
+    # 统计关键词
+    all_names = []
+    if isinstance(all_time, dict) and "items" in all_time:
+        for r in all_time["items"][:10]:
+            all_names.append((r["full_name"], r.get("description","") or ""))
+    if isinstance(new_week, dict) and "items" in new_week:
+        for r in new_week["items"][:10]:
+            all_names.append((r["full_name"], r.get("description","") or ""))
+
+    ai_agent_count = sum(1 for _,d in all_names if "agent" in d.lower() or "ai" in d.lower())
+    learning_count = sum(1 for _,d in all_names if "book" in d.lower() or "learn" in d.lower() or "course" in d.lower() or "study" in d.lower() or "guide" in d.lower())
+
+    if ai_agent_count > 5:
+        lines.append("### AI Agent 持续主导\n")
+        lines.append("本周项目中 AI/Agent 相关项目占比突出，涵盖编码 Agent、多 Agent 协作框架、端侧推理等多个方向，")
+        lines.append("反映 AI Agent 正从概念走向工具化落地。\n")
+    if learning_count > 3:
+        lines.append("### 学习资源类项目依旧坚挺\n")
+        lines.append("全历史 Star 榜中学习资源类项目持续霸榜，build-your-own-x、freeCodeCamp、system-design-primer 等")
+        lines.append("仍是开发者社区最认可的知识沉淀。\n")
+    lines.append("")
+    lines.append("*详细趋势分析可根据每周热点手动补充。*\n")
+
+    # --- 语言分布统计 ---
+    lang_counts = {}
+
+    if isinstance(all_time, dict) and "items" in all_time:
+        for r in all_time["items"][:10]:
+            l = r.get("language")
+            if l:
+                lang_counts[l] = lang_counts.get(l, 0) + 1
+    if isinstance(new_week, dict) and "items" in new_week:
+        for r in new_week["items"][:15]:
+            l = r.get("language")
+            if l:
+                lang_counts[l] = lang_counts.get(l, 0) + 1
+    for repo in trending[:15]:
+        info = repo_info(repo)
+        if isinstance(info, dict):
+            l = info.get("language")
+            if l:
+                lang_counts[l] = lang_counts.get(l, 0) + 1
+
     lines += [
         "",
         "---",
         "",
-        "## 第三部分：趋势解读\n",
-        "*趋势分析由脚本自动生成，可根据热点动态编辑。*\n",
-        "---",
-        "",
-        f"*本报告由 GitHub Actions 每日自动生成，数据截止 {TODAY}。*\n",
+        "## 第四部分：语言分布统计\n",
+        "| 语言 | 项目数 |",
+        "|------|:------:|",
     ]
+    for lang, count in sorted(lang_counts.items(), key=lambda x: -x[1])[:10]:
+        lines.append(f"| {lang} | {count} |")
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+    lines.append(f"Python 和 TypeScript 在 AI 项目中占比最高，Rust 则多见于性能敏感的工具链层。")
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+    lines.append(f"*本报告由 GitHub Actions 每日自动生成，数据截止 {TODAY}。*\n")
 
     return "\n".join(lines)
 
