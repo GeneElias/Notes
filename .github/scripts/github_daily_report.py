@@ -39,7 +39,7 @@ def fetch_trending():
         )
         if r.returncode != 0:
             return []
-        repos = re.findall(r'href="/"([^"]+)"', r.stdout)
+        repos = re.findall(r'href="/([^"]+)"', r.stdout)
         # Filter to owner/repo patterns
         repos = [x for x in repos if "/" in x and not x.startswith("sponsors/") and not x.startswith("trending/")]
         seen = set()
@@ -158,7 +158,7 @@ def main():
         log("飞书未配置，跳过推送")
 
     # 输出文件名供 workflow 下一步使用
-    print(f"::set-output name=report_file::{REPORT_FILE}")
+
     log("全部完成！")
 
 
