@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
 """
 GitHub Daily Report Generator — CI 版
-在 GitHub Actions 中运行，从环境变量获取 Token 和 Webhook
 """
 
-import json
-import os
-import re
-import subprocess
+import json, os, re, subprocess, urllib.request
 from datetime import datetime, timedelta
 
 REPO_DIR = os.getcwd()
@@ -15,8 +11,6 @@ API_BASE = "https://api.github.com"
 TODAY = datetime.now().strftime("%Y-%m-%d")
 WEEK_AGO = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
 REPORT_FILE = f"GitHub_Weekly_Report_{datetime.now().strftime('%Y%m%d')}.md"
-
-# 从环境变量读取（由 GitHub Secrets 注入）
 FEISHU_WEBHOOK = os.environ.get("FEISHU_WEBHOOK", "")
 
 
@@ -45,7 +39,9 @@ def fetch_trending():
         )
         if r.returncode != 0:
             return []
-        repos = re.findall(r'href="/"([a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+)"', r.stdout)
+        repos = re.findall(r'href="/"([^"]+)"', r.stdout)
+        # Filter to owner/repo patterns
+        repos = [x for x in repos if "/" in x and not x.startswith("sponsors/") and not x.startswith("trending/")]
         seen = set()
         return [x for x in repos if x not in seen and not seen.add(x)]
     except Exception as e:
@@ -60,18 +56,18 @@ def main():
     new_week = api_get(f"{API_BASE}/search/repositories?q=created:%3E{WEEK_AGO}&sort=stars&order=desc&per_page=30")
     trending = fetch_trending()
 
-    lines = []
-    lines.append("# GitHub 近一周项目分析报告\n")
-    lines.append(f"**报告日期：** {TODAY}（数据截至当日 UTC+8）  ")
-    lines.append("**数据来源：** GitHub API + GitHub Trending (Weekly)")
-    lines.append("")
-    lines.append("---")
-    lines.append("")
+    lines = [
+        "# GitHub 近一周项目分析报告\n",
+        f"**报告日期：** {TODAY}（数据截至当日 UTC+8）  ",
+        "**数据来源：** GitHub API + GitHub Trending (Weekly)",
+        "",
+        "---",
+        "",
+        "## 第一部分：总 Star 排名前十（全历史累计）\n",
+        "| # | 项目 | Stars | 语言 | 简介 |",
+        "|---|------|------:|------|------|",
+    ]
 
-    # ---- 全历史 Top 10 ----
-    lines.append("## 第一部分：总 Star 排名前十（全历史累计）\n")
-    lines.append("| # | 项目 | Stars | 语言 | 简介 |")
-    lines.append("|---|------|------:|------|------|")
     if all_time and "items" in all_time:
         for i, r in enumerate(all_time["items"][:10], 1):
             n = r["full_name"]
@@ -79,14 +75,17 @@ def main():
             l = r.get("language") or "-"
             d = (r.get("description") or "")[:70]
             lines.append(f"| {i} | **[{n}](https://github.com/{n})** | {s} | {l} | {d} |")
-    lines.append("")
 
-    # ---- 本周新星 ----
-    lines.append("---\n")
-    lines.append("## 第二部分：本周 Star 增长排名\n")
-    lines.append("### 2.1 本周新星爆发榜（本周新创建项目）\n")
-    lines.append("| # | 项目 | Stars | 语言 | 简介 |")
-    lines.append("|---|------|------:|------|------|")
+    lines += [
+        "",
+        "---",
+        "",
+        "## 第二部分：本周 Star 增长排名\n",
+        "### 2.1 本周新星爆发榜（本周新创建项目）\n",
+        "| # | 项目 | Stars | 语言 | 简介 |",
+        "|---|------|------:|------|------|",
+    ]
+
     if new_week and "items" in new_week:
         for i, r in enumerate(new_week["items"][:15], 1):
             n = r["full_name"]
@@ -94,12 +93,14 @@ def main():
             l = r.get("language") or "N/A"
             d = (r.get("description") or "")[:60]
             lines.append(f"| {i} | **[{n}](https://github.com/{n})** | {s} | {l} | {d} |")
-    lines.append("")
 
-    # ---- Trending 周榜 ----
-    lines.append("### 2.2 本周 Trending（成熟项目，周受关注度最高）\n")
-    lines.append("| # | 项目 | Stars | 语言 | 简介 |")
-    lines.append("|---|------|------:|------|------|")
+    lines += [
+        "",
+        "### 2.2 本周 Trending（成熟项目，周受关注度最高）\n",
+        "| # | 项目 | Stars | 语言 | 简介 |",
+        "|---|------|------:|------|------|",
+    ]
+
     for i, repo in enumerate(trending[:15], 1):
         info = repo_info(repo)
         if info:
@@ -109,24 +110,26 @@ def main():
         else:
             s, l, d = "?", "?", ""
         lines.append(f"| {i} | **[{repo}](https://github.com/{repo})** | {s} | {l} | {d} |")
-    lines.append("")
 
-    lines.append("---\n")
-    lines.append("## 第三部分：趋势解读\n")
-    lines.append("*趋势分析由脚本自动生成，可根据热点动态编辑。*\n")
-    lines.append("---\n")
-    lines.append(f"*报告由 GitHub Actions 每日自动生成，数据截止 {TODAY}。*\n")
+    lines += [
+        "",
+        "---",
+        "",
+        "## 第三部分：趋势解读\n",
+        "*趋势分析由脚本自动生成，可根据热点动态编辑。*\n",
+        "---",
+        "",
+        f"*本报告由 GitHub Actions 每日自动生成，数据截止 {TODAY}。*\n",
+    ]
 
     content = "\n".join(lines)
-
     report_path = os.path.join(REPO_DIR, REPORT_FILE)
     with open(report_path, "w", encoding="utf-8") as f:
         f.write(content)
-    log(f"报告写入: {report_path}")
+    log(f"报告写入: {REPORT_FILE}")
 
     # 飞书推送
     if FEISHU_WEBHOOK:
-        import urllib.request
         card = {
             "msg_type": "interactive",
             "card": {
@@ -140,10 +143,7 @@ def main():
                         "content": f"**报告已更新**\n📅 数据截止：{TODAY}\n\n👉 [查看完整报告](https://github.com/GeneElias/Notes/blob/main/{REPORT_FILE})"
                     },
                     {"tag": "hr"},
-                    {
-                        "tag": "note",
-                        "elements": [{"tag": "plain_text", "content": "GitHub Daily Report Bot · 自动推送"}]
-                    }
+                    {"tag": "note", "elements": [{"tag": "plain_text", "content": f"GitHub Daily Report Bot · 自动推送 · 历史报告一览"}]}
                 ]
             }
         }
@@ -157,6 +157,8 @@ def main():
     else:
         log("飞书未配置，跳过推送")
 
+    # 输出文件名供 workflow 下一步使用
+    print(f"::set-output name=report_file::{REPORT_FILE}")
     log("全部完成！")
 
 
