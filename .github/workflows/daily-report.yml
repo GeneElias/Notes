@@ -1,0 +1,30 @@
+name: 📊 Daily GitHub Report
+
+on:
+  schedule:
+    # 北京时间 09:00 = UTC 01:00
+    - cron: '0 1 * * *'
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate Report
+        env:
+          GIT_TOKEN: ${{ secrets.GH_PAT }}
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+        run: python3 .github/scripts/github_daily_report.py
+
+      - name: Commit and Push
+        env:
+          GIT_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          git config user.name "Report Bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add GitHub_Weekly_Report_*.md
+          git diff --cached --quiet || \
+            (git commit -m "chore: daily GitHub report ($(date +%Y-%m-%d))" && \
+             git push https://GeneElias:${GIT_TOKEN}@github.com/GeneElias/Notes.git main)
