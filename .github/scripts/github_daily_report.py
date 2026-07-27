@@ -17,6 +17,7 @@ API_BASE = "https://api.github.com"
 # 从环境变量读取（GitHub Secrets → Actions env）
 FEISHU_APP_ID = os.environ.get("FEISHU_APP_ID", "")
 FEISHU_APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "")
+FEISHU_WEBHOOK = os.environ.get("FEISHU_WEBHOOK", "")
 
 
 def log(msg):
@@ -231,6 +232,36 @@ def push_to_feishu(markdown_content):
 
     doc_url = f"https://bytedance.feishu.cn/docx/{doc_id}"
     log(f"飞书推送完成，共 {total_added} 个内容块")
+
+    # 群消息通知
+    if FEISHU_WEBHOOK:
+        try:
+            card = {
+                "msg_type": "interactive",
+                "card": {
+                    "header": {
+                        "title": {"tag": "plain_text", "content": f"📊 GitHub 项目周报 ({TODAY})"},
+                        "template": "indigo"
+                    },
+                    "elements": [
+                        {
+                            "tag": "markdown",
+                            "content": f"**报告已更新**\n📅 {TODAY}\n\n👉 [查看完整文档]({doc_url})"
+                        },
+                        {"tag": "hr"},
+                        {"tag": "note", "elements": [{"tag": "plain_text", "content": "每日自动生成 · GitHub Actions"}]}
+                    ]
+                }
+            }
+            data = json.dumps(card).encode()
+            req = urllib.request.Request(FEISHU_WEBHOOK, data=data, headers={"Content-Type": "application/json"})
+            urllib.request.urlopen(req, timeout=10)
+            log("群消息推送成功")
+        except Exception as e:
+            log(f"群消息推送失败: {e}")
+    else:
+        log("飞书 Webhook 未配置，跳过群消息")
+
     return doc_url
 
 
