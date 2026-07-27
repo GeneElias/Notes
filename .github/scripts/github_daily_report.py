@@ -262,46 +262,42 @@ def push_to_feishu(markdown_content):
     else:
         log("飞书 Webhook 未配置，跳过群消息")
 
-    # 第一步：加你为协作者（完全去掉 query 参数，全放 body）
-    log("添加文档协作者...")
-    resp = feishu_request(
-        "POST",
-        f"/drive/v1/permissions/{doc_id}/members",
-        token=token,
-        data={"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs", "perm": "full_access"}
+    # 用 curl 诊断：先查文件信息，确认 file_token
+    import subprocess
+    log("诊断: 检查文件信息...")
+    diag = subprocess.run(
+        ["curl", "-s", "-X", "GET",
+         f"https://open.feishu.cn/open-apis/drive/v1/files/{doc_id}",
+         "-H", f"Authorization: Bearer {token}"],
+        capture_output=True, text=True, timeout=15
     )
-    # 也试带 need_notification 的版本
-    if resp.get("code") != 0 and resp.get("code") != 99992402:
-        log(f"协作者添加失败: code={resp.get('code')} msg={resp.get('msg','')}")
-    elif resp.get("code") == 99992402:
-        log("body 方式也失败，试 query 方式")
-        resp2 = feishu_request(
-            "POST",
-            f"/drive/v1/permissions/{doc_id}/members?need_notification=false",
-            token=token,
-            data={"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs", "perm": "full_access"}
-        )
-        if resp2.get("code") == 0:
-            log("协作者添加成功")
-        else:
-            log(f"协作者添加失败(带need_notification): code={resp2.get('code')} msg={resp2.get('msg','')}")
-    else:
-        log("协作者添加成功")
+    log(f"文件信息: {diag.stdout[:500]}")
 
-    # 第二步：试转让所有权（全放 body）
-    log("转让文档所有权...")
-    resp = feishu_request(
-        "POST",
-        f"/drive/v1/permissions/{doc_id}/members/transfer_owner",
-        token=token,
-        data={"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs"}
+    # 用 curl 添加协作者
+    log("用 curl 添加协作者...")
+    payload = json.dumps({"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs", "perm": "full_access"})
+    curl_resp = subprocess.run(
+        ["curl", "-s", "-X", "POST",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{doc_id}/members",
+         "-H", f"Authorization: Bearer {token}",
+         "-H", "Content-Type: application/json",
+         "-d", payload],
+        capture_output=True, text=True, timeout=15
     )
-    if resp.get("code") == 0:
-        log("文档所有权已转让给你，你现在是文档所有者了")
-    else:
-        log(f"所有权转让失败: code={resp.get('code')} msg={resp.get('msg','')}")
+    log(f"curl 加协作者: {curl_resp.stdout[:500]}")
 
-    return doc_url
+    # 用 curl 转让所有权
+    log("用 curl 转让所有权...")
+    payload2 = json.dumps({"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs"})
+    curl_resp2 = subprocess.run(
+        ["curl", "-s", "-X", "POST",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{doc_id}/members/transfer_owner",
+         "-H", f"Authorization: Bearer {token}",
+         "-H", "Content-Type: application/json",
+         "-d", payload2],
+        capture_output=True, text=True, timeout=15
+    )
+    log(f"curl 转让所有权: {curl_resp2.stdout[:500]}")    return doc_url
 
 
 # ═══ 主流程 ═══
