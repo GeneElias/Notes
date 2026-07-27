@@ -302,7 +302,8 @@ def push_to_feishu(markdown_content):
          "-d", '{"link_share_entity":"company_editable"}'],
         capture_output=True, text=True, timeout=15
     )
-    log(f"PATCH public min: {r.stdout[:500]}")    return doc_url
+    log(f"PATCH public min: {r.stdout[:500]}")
+    return doc_url
 
 
 # ═══ 主流程 ═══
