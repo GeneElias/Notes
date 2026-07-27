@@ -303,7 +303,8 @@ def push_to_feishu(markdown_content):
              "-d", json.dumps({"member_type":"openid","member_id":"ou_7d8a6e6df7621556ce0d21922b676706ccs"})],
             capture_output=True, text=True, timeout=15
         )
-        log(f"type={ft} 转让所有权: {r.stdout[:400]}")    return doc_url
+        log(f"type={ft} 转让所有权: {r.stdout[:400]}")
+    return doc_url
 
 
 # ═══ 主流程 ═══
