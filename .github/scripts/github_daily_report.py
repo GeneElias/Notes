@@ -262,23 +262,30 @@ def push_to_feishu(markdown_content):
     else:
         log("飞书 Webhook 未配置，跳过群消息")
 
-    # 用 curl 诊断：先查文件信息，确认 file_token
-    import subprocess
-    log("诊断: 检查文件信息...")
-    diag = subprocess.run(
+    # 先获取文档的真实 file_token（通过 docx API 查文档信息）
+    log("获取文档 file_token...")
+    doc_info = subprocess.run(
         ["curl", "-s", "-X", "GET",
-         f"https://open.feishu.cn/open-apis/drive/v1/files/{doc_id}",
-         "-H", f"Authorization: Bearer {token}"],
+         f"https://open.feishu.cn/open-apis/docx/v1/documents/{doc_id}",
+         "-H", f"Authorization: Bearer {token}",
+         "-H", "Content-Type: application/json"],
         capture_output=True, text=True, timeout=15
     )
-    log(f"文件信息: {diag.stdout[:500]}")
+    log(f"文档信息: {doc_info.stdout[:400]}")
+    try:
+        doc_data = json.loads(doc_info.stdout)
+        # 有些版本的 API 返回的 file_token 和 document_id 不同
+        file_token = doc_data.get("data", {}).get("document", {}).get("document_id", doc_id)
+    except:
+        file_token = doc_id
+    log(f"使用 file_token: {file_token}")
 
-    # 用 curl 添加协作者
+    # 用 curl 添加协作者（加 ?type=openid query 参数）
     log("用 curl 添加协作者...")
-    payload = json.dumps({"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs", "perm": "full_access"})
+    payload = json.dumps({"member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs", "perm": "full_access"})
     curl_resp = subprocess.run(
         ["curl", "-s", "-X", "POST",
-         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{doc_id}/members",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members?type=openid&need_notification=false",
          "-H", f"Authorization: Bearer {token}",
          "-H", "Content-Type: application/json",
          "-d", payload],
@@ -286,12 +293,12 @@ def push_to_feishu(markdown_content):
     )
     log(f"curl 加协作者: {curl_resp.stdout[:500]}")
 
-    # 用 curl 转让所有权
+    # 用 curl 转让所有权（同样加 ?type=openid）
     log("用 curl 转让所有权...")
-    payload2 = json.dumps({"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs"})
+    payload2 = json.dumps({"member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs"})
     curl_resp2 = subprocess.run(
         ["curl", "-s", "-X", "POST",
-         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{doc_id}/members/transfer_owner",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members/transfer_owner?type=openid&need_notification=false",
          "-H", f"Authorization: Bearer {token}",
          "-H", "Content-Type: application/json",
          "-d", payload2],
