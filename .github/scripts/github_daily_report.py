@@ -297,7 +297,8 @@ def push_to_feishu(markdown_content):
          "-d", payload2],
         capture_output=True, text=True, timeout=15
     )
-    log(f"curl 转让所有权: {curl_resp2.stdout[:500]}")    return doc_url
+    log(f"curl 转让所有权: {curl_resp2.stdout[:500]}")
+    return doc_url
 
 
 # ═══ 主流程 ═══
