@@ -280,29 +280,41 @@ def push_to_feishu(markdown_content):
         file_token = doc_id
     log(f"使用 file_token: {file_token}")
 
-    # 用正确参数做 PATCH public（让文档公司内可编辑）
-    log("--- PATCH public 公司内可编辑 ---")
+    # 正确的 PATCH public：tenant_editable
+    log("--- PATCH public tenant_editable ---")
     r = subprocess.run(
         ["curl", "-s", "-X", "PATCH",
          f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/public?type=docx",
          "-H", f"Authorization: Bearer {token}",
          "-H", "Content-Type: application/json",
-         "-d", '{"link_share_entity":"company_editable","security_entity":"anyone_can_view","external_access_entity":"open","invite_external":false}'],
+         "-d", '{"link_share_entity":"tenant_editable"}'],
         capture_output=True, text=True, timeout=15
     )
-    log(f"PATCH public: {r.stdout[:500]}")
-    
-    # 也试不带 security_entity
-    log("--- PATCH public 最小参数 ---")
+    log(f"tenant_editable: {r.stdout[:500]}")
+    try:
+        resp = json.loads(r.stdout)
+        if resp.get("code") == 0:
+            log("✅ 文档已设为公司内可编辑，你现在可以打开编辑了！")
+    except:
+        pass
+
+    # 也试 anyone_editable
+    log("--- PATCH public anyone_editable ---")
     r = subprocess.run(
         ["curl", "-s", "-X", "PATCH",
          f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/public?type=docx",
          "-H", f"Authorization: Bearer {token}",
          "-H", "Content-Type: application/json",
-         "-d", '{"link_share_entity":"company_editable"}'],
+         "-d", '{"link_share_entity":"anyone_editable"}'],
         capture_output=True, text=True, timeout=15
     )
-    log(f"PATCH public min: {r.stdout[:500]}")
+    log(f"anyone_editable: {r.stdout[:500]}")
+    try:
+        resp = json.loads(r.stdout)
+        if resp.get("code") == 0:
+            log("✅ 文档已设为公开可编辑！")
+    except:
+        pass
     return doc_url
 
 
