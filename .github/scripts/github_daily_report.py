@@ -262,18 +262,31 @@ def push_to_feishu(markdown_content):
     else:
         log("飞书 Webhook 未配置，跳过群消息")
 
-    # 转让文档所有权给你的飞书账号
+    # 第一步：加你为协作者
+    log("添加文档协作者...")
+    resp = feishu_request(
+        "POST",
+        f"/drive/v1/permissions/{doc_id}/members?type=openid&need_notification=false",
+        token=token,
+        data={"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs", "perm": "full_access"}
+    )
+    if resp.get("code") == 0:
+        log("协作者添加成功")
+    else:
+        log(f"协作者添加失败: code={resp.get('code')} msg={resp.get('msg','')}")
+
+    # 第二步：转让所有权
     log("转让文档所有权...")
     resp = feishu_request(
         "POST",
         f"/drive/v1/permissions/{doc_id}/members/transfer_owner",
         token=token,
-        data={"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs"}
+        data={"type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs", "need_notification": False}
     )
     if resp.get("code") == 0:
         log("文档所有权已转让给你，你现在是文档所有者了")
     else:
-        log(f"所有权转让失败: {resp.get('msg', '')}")
+        log(f"所有权转让失败: code={resp.get('code')} msg={resp.get('msg','')}")
 
     return doc_url
 
