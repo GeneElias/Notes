@@ -234,6 +234,21 @@ def push_to_feishu(markdown_content):
     log(f"飞书推送完成，共 {total_added} 个内容块")
 
     # 群消息通知
+
+    # 添加协作者（你的账号，可编辑）
+    try:
+        resp = feishu_request(
+            "POST",
+            f"/drive/v1/permissions/{doc_id}/members?type=openid&need_notification=false",
+            token=token,
+            data={"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs", "perm": "edit"}
+        )
+        if resp.get("code") == 0:
+            log("文档协作者添加成功（你已有编辑权限）")
+        else:
+            log(f"添加协作者失败: {resp.get('msg', '')}")
+    except Exception as e:
+        log(f"添加协作者异常: {e}")
     if FEISHU_WEBHOOK:
         try:
             card = {
