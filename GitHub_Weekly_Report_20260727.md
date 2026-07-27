@@ -9,15 +9,15 @@
 
 | # | 项目 | Stars | 语言 | 简介 |
 |---|------|------:|------|------|
-| 1 | **[codecrafters-io/build-your-own-x](https://github.com/codecrafters-io/build-your-own-x)** | 532,058 | Markdown | Master programming by recreating your favorite technologies from scrat |
+| 1 | **[codecrafters-io/build-your-own-x](https://github.com/codecrafters-io/build-your-own-x)** | 532,059 | Markdown | Master programming by recreating your favorite technologies from scrat |
 | 2 | **[sindresorhus/awesome](https://github.com/sindresorhus/awesome)** | 489,579 | - | 😎 Awesome lists about all kinds of interesting topics |
-| 3 | **[freeCodeCamp/freeCodeCamp](https://github.com/freeCodeCamp/freeCodeCamp)** | 452,953 | TypeScript | freeCodeCamp.org's open-source codebase and curriculum. Learn math, pr |
-| 4 | **[public-apis/public-apis](https://github.com/public-apis/public-apis)** | 452,784 | Python | A collective list of free APIs |
+| 3 | **[freeCodeCamp/freeCodeCamp](https://github.com/freeCodeCamp/freeCodeCamp)** | 452,955 | TypeScript | freeCodeCamp.org's open-source codebase and curriculum. Learn math, pr |
+| 4 | **[public-apis/public-apis](https://github.com/public-apis/public-apis)** | 452,785 | Python | A collective list of free APIs |
 | 5 | **[EbookFoundation/free-programming-books](https://github.com/EbookFoundation/free-programming-books)** | 393,122 | Python | :books: Freely available programming books |
 | 6 | **[openclaw/openclaw](https://github.com/openclaw/openclaw)** | 384,311 | TypeScript | Your own personal AI assistant. Any OS. Any Platform. The lobster way. |
-| 7 | **[nilbuild/developer-roadmap](https://github.com/nilbuild/developer-roadmap)** | 362,847 | TypeScript | Interactive roadmaps, guides and other educational content to help dev |
+| 7 | **[nilbuild/developer-roadmap](https://github.com/nilbuild/developer-roadmap)** | 362,848 | TypeScript | Interactive roadmaps, guides and other educational content to help dev |
 | 8 | **[donnemartin/system-design-primer](https://github.com/donnemartin/system-design-primer)** | 359,377 | Python | Learn how to design large-scale systems. Prep for the system design in |
-| 9 | **[jwasham/coding-interview-university](https://github.com/jwasham/coding-interview-university)** | 357,240 | - | A complete computer science study plan to become a software engineer. |
+| 9 | **[jwasham/coding-interview-university](https://github.com/jwasham/coding-interview-university)** | 357,241 | - | A complete computer science study plan to become a software engineer. |
 | 10 | **[vinta/awesome-python](https://github.com/vinta/awesome-python)** | 310,631 | Python | An opinionated list of Python frameworks, libraries, tools, and resour |
 
 ---
@@ -28,12 +28,12 @@
 
 | # | 项目 | Stars | 语言 | 简介 |
 |---|------|------:|------|------|
-| 1 | **[slvDev/esp32-ai](https://github.com/slvDev/esp32-ai)** | 1,635 | Python |  |
-| 2 | **[vercel-labs/scriptc](https://github.com/vercel-labs/scriptc)** | 1,377 | TypeScript | TypeScript-to-Native Compiler |
+| 1 | **[slvDev/esp32-ai](https://github.com/slvDev/esp32-ai)** | 1,637 | Python |  |
+| 2 | **[vercel-labs/scriptc](https://github.com/vercel-labs/scriptc)** | 1,380 | TypeScript | TypeScript-to-Native Compiler |
 | 3 | **[Jakubantalik/thinking-orbs](https://github.com/Jakubantalik/thinking-orbs)** | 1,140 | TypeScript | Dotted thought-orb loading indicators for AI & agent UIs — s |
-| 4 | **[mikiarlo3/ai-copywriter](https://github.com/mikiarlo3/ai-copywriter)** | 902 | Python | An AI copywriter that uses real copywriting skills + real ma |
-| 5 | **[mshumer/Claude-of-Duty](https://github.com/mshumer/Claude-of-Duty)** | 901 | JavaScript | A Call of Duty-quality FPS in Three.js, built from a single  |
-| 6 | **[makecindy/cindy](https://github.com/makecindy/cindy)** | 801 | TypeScript | Consider it done. The open-source AI agent that works out of |
+| 4 | **[mshumer/Claude-of-Duty](https://github.com/mshumer/Claude-of-Duty)** | 903 | JavaScript | A Call of Duty-quality FPS in Three.js, built from a single  |
+| 5 | **[mikiarlo3/ai-copywriter](https://github.com/mikiarlo3/ai-copywriter)** | 902 | Python | An AI copywriter that uses real copywriting skills + real ma |
+| 6 | **[makecindy/cindy](https://github.com/makecindy/cindy)** | 802 | TypeScript | Consider it done. The open-source AI agent that works out of |
 | 7 | **[gnipbao/story-to-handdrawn-video](https://github.com/gnipbao/story-to-handdrawn-video)** | 662 | JavaScript | Agent skill: convert Chinese story copy or ordered images in |
 | 8 | **[hahhforest/pi-textbook](https://github.com/hahhforest/pi-textbook)** | 573 | TypeScript | 《动手学 Pi》：沿 15 个真实 checkpoint 从零构建 Pi-style Agent |
 | 9 | **[VictorTaelin/OptMem](https://github.com/VictorTaelin/OptMem)** | 562 | Python | Permanent memory for AI agents. A 426-token prompt, a script |
@@ -49,20 +49,20 @@
 | # | 项目 | Stars | 语言 | 简介 |
 |---|------|------:|------|------|
 | 1 | **[ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd)** | 11,133 | Python | A skill for your coding agent to stop it from burying the an |
-| 2 | **[koala73/worldmonitor](https://github.com/koala73/worldmonitor)** | 75,183 | TypeScript | Real-time global intelligence dashboard. AI-powered news agg |
-| 3 | **[bojieli/ai-agent-book](https://github.com/bojieli/ai-agent-book)** | 22,418 | Python | 《深入理解 AI Agent：设计原理与工程实践》（李博杰 著）开源主仓库：全书正文、编译版 PDF 与按章配套代码 |
-| 4 | **[oblien/openship](https://github.com/oblien/openship)** | 8,859 | TypeScript | Self-hosted deployment platform |
-| 5 | **[agegr/pi-web](https://github.com/agegr/pi-web)** | 2,981 | TypeScript | Web UI for the pi coding agent |
-| 6 | **[tirth8205/code-review-graph](https://github.com/tirth8205/code-review-graph)** | 26,853 | Python | Local-first code intelligence graph for MCP and CLI. Builds  |
-| 7 | **[diegosouzapw/OmniRoute](https://github.com/diegosouzapw/OmniRoute)** | 31,788 | TypeScript | Never stop coding. Free MIT AI gateway: one endpoint, 290+ p |
+| 2 | **[koala73/worldmonitor](https://github.com/koala73/worldmonitor)** | 75,187 | TypeScript | Real-time global intelligence dashboard. AI-powered news agg |
+| 3 | **[bojieli/ai-agent-book](https://github.com/bojieli/ai-agent-book)** | 22,424 | Python | 《深入理解 AI Agent：设计原理与工程实践》（李博杰 著）开源主仓库：全书正文、编译版 PDF 与按章配套代码 |
+| 4 | **[oblien/openship](https://github.com/oblien/openship)** | 8,860 | TypeScript | Self-hosted deployment platform |
+| 5 | **[agegr/pi-web](https://github.com/agegr/pi-web)** | 2,982 | TypeScript | Web UI for the pi coding agent |
+| 6 | **[tirth8205/code-review-graph](https://github.com/tirth8205/code-review-graph)** | 26,854 | Python | Local-first code intelligence graph for MCP and CLI. Builds  |
+| 7 | **[diegosouzapw/OmniRoute](https://github.com/diegosouzapw/OmniRoute)** | 31,790 | TypeScript | Never stop coding. Free MIT AI gateway: one endpoint, 290+ p |
 | 8 | **[1jehuang/jcode](https://github.com/1jehuang/jcode)** | 11,792 | Rust | The most RAM effiecent harness |
-| 9 | **[mattpocock/skills](https://github.com/mattpocock/skills)** | 190,971 | Shell | Skills for Real Engineers. Straight from my .agents director |
-| 10 | **[earendil-works/pi](https://github.com/earendil-works/pi)** | 78,829 | TypeScript | AI agent toolkit: unified LLM API, agent loop, TUI, coding a |
-| 11 | **[ruvnet/RuView](https://github.com/ruvnet/RuView)** | 86,822 | Rust | π RuView turns commodity WiFi signals into real-time spatial |
+| 9 | **[mattpocock/skills](https://github.com/mattpocock/skills)** | 190,975 | Shell | Skills for Real Engineers. Straight from my .agents director |
+| 10 | **[earendil-works/pi](https://github.com/earendil-works/pi)** | 78,830 | TypeScript | AI agent toolkit: unified LLM API, agent loop, TUI, coding a |
+| 11 | **[ruvnet/RuView](https://github.com/ruvnet/RuView)** | 86,821 | Rust | π RuView turns commodity WiFi signals into real-time spatial |
 | 12 | **[shiyu-coder/Kronos](https://github.com/shiyu-coder/Kronos)** | 34,429 | Python | Kronos: A Foundation Model for the Language of Financial Mar |
 | 13 | **[Pumpkin-MC/Pumpkin](https://github.com/Pumpkin-MC/Pumpkin)** | 10,176 | Rust | Empowering everyone to host fast and efficient Minecraft ser |
 | 14 | **[rohitg00/ai-engineering-from-scratch](https://github.com/rohitg00/ai-engineering-from-scratch)** | 44,107 | Python | Learn it. Build it. Ship it for others. |
-| 15 | **[HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor)** | 30,425 | Python | DeepTutor: Lifelong Personalized Tutoring. https://deeptutor |
+| 15 | **[HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor)** | 30,426 | Python | DeepTutor: Lifelong Personalized Tutoring. https://deeptutor |
 
 ---
 
