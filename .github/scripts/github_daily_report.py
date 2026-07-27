@@ -262,59 +262,20 @@ def push_to_feishu(markdown_content):
     else:
         log("飞书 Webhook 未配置，跳过群消息")
 
-    # 先获取文档的真实 file_token（通过 docx API 查文档信息）
-    log("获取文档 file_token...")
-    doc_info = subprocess.run(
-        ["curl", "-s", "-X", "GET",
-         f"https://open.feishu.cn/open-apis/docx/v1/documents/{doc_id}",
-         "-H", f"Authorization: Bearer {token}",
-         "-H", "Content-Type: application/json"],
-        capture_output=True, text=True, timeout=15
-    )
-    log(f"文档信息: {doc_info.stdout[:400]}")
-    try:
-        doc_data = json.loads(doc_info.stdout)
-        # 有些版本的 API 返回的 file_token 和 document_id 不同
-        file_token = doc_data.get("data", {}).get("document", {}).get("document_id", doc_id)
-    except:
-        file_token = doc_id
-    log(f"使用 file_token: {file_token}")
-
-    # 正确的 PATCH public：tenant_editable
-    log("--- PATCH public tenant_editable ---")
-    r = subprocess.run(
+    # 设置文档为公司内可编辑（tenant_editable）
+    log("设置文档分享权限...")
+    share_resp = subprocess.run(
         ["curl", "-s", "-X", "PATCH",
-         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/public?type=docx",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{doc_id}/public?type=docx",
          "-H", f"Authorization: Bearer {token}",
          "-H", "Content-Type: application/json",
          "-d", '{"link_share_entity":"tenant_editable"}'],
         capture_output=True, text=True, timeout=15
     )
-    log(f"tenant_editable: {r.stdout[:500]}")
-    try:
-        resp = json.loads(r.stdout)
-        if resp.get("code") == 0:
-            log("✅ 文档已设为公司内可编辑，你现在可以打开编辑了！")
-    except:
-        pass
-
-    # 也试 anyone_editable
-    log("--- PATCH public anyone_editable ---")
-    r = subprocess.run(
-        ["curl", "-s", "-X", "PATCH",
-         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/public?type=docx",
-         "-H", f"Authorization: Bearer {token}",
-         "-H", "Content-Type: application/json",
-         "-d", '{"link_share_entity":"anyone_editable"}'],
-        capture_output=True, text=True, timeout=15
-    )
-    log(f"anyone_editable: {r.stdout[:500]}")
-    try:
-        resp = json.loads(r.stdout)
-        if resp.get("code") == 0:
-            log("✅ 文档已设为公开可编辑！")
-    except:
-        pass
+    if json.loads(share_resp.stdout).get("code") == 0:
+        log("文档已设为公司内可编辑")
+    else:
+        log(f"设置分享权限失败: {share_resp.stdout[:200]}")
     return doc_url
 
 
