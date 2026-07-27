@@ -280,12 +280,12 @@ def push_to_feishu(markdown_content):
         file_token = doc_id
     log(f"使用 file_token: {file_token}")
 
-    # 用 curl 添加协作者（加 ?type=openid query 参数）
+    # 用 curl 添加协作者（type=docx 指文件类型，member_type 放 body）
     log("用 curl 添加协作者...")
-    payload = json.dumps({"member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs", "perm": "full_access"})
+    payload = json.dumps({"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs", "perm": "full_access"})
     curl_resp = subprocess.run(
         ["curl", "-s", "-X", "POST",
-         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members?type=openid&need_notification=false",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members?type=docx&need_notification=false",
          "-H", f"Authorization: Bearer {token}",
          "-H", "Content-Type: application/json",
          "-d", payload],
@@ -293,12 +293,12 @@ def push_to_feishu(markdown_content):
     )
     log(f"curl 加协作者: {curl_resp.stdout[:500]}")
 
-    # 用 curl 转让所有权（同样加 ?type=openid）
+    # 用 curl 转让所有权（同样 type=docx + member_type 放 body）
     log("用 curl 转让所有权...")
-    payload2 = json.dumps({"member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs"})
+    payload2 = json.dumps({"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs"})
     curl_resp2 = subprocess.run(
         ["curl", "-s", "-X", "POST",
-         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members/transfer_owner?type=openid&need_notification=false",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members/transfer_owner?type=docx&need_notification=false",
          "-H", f"Authorization: Bearer {token}",
          "-H", "Content-Type: application/json",
          "-d", payload2],
