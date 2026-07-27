@@ -324,7 +324,8 @@ def push_to_feishu(markdown_content):
          "-d", '{"member_type":"email","member_id":"test@test.com","perm":"edit"}'],
         capture_output=True, text=True, timeout=15
     )
-    log(f"4 email: {r.stdout[:300]}")    return doc_url
+    log(f"4 email: {r.stdout[:300]}")
+    return doc_url
 
 
 # ═══ 主流程 ═══
