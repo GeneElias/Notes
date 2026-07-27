@@ -280,30 +280,38 @@ def push_to_feishu(markdown_content):
         file_token = doc_id
     log(f"使用 file_token: {file_token}")
 
-    # type 参数可能是 doc 而不是 docx，试试
-    for ft in ["doc", "docx"]:
-        log(f"--- type={ft} 添加协作者 ---")
-        r = subprocess.run(
-            ["curl", "-s", "-X", "POST",
-             f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members?type={ft}",
-             "-H", f"Authorization: Bearer {token}",
-             "-H", "Content-Type: application/json",
-             "-d", json.dumps({"member_type":"openid","member_id":"ou_7d8a6e6df7621556ce0d21922b676706ccs","perm":"edit"})],
-            capture_output=True, text=True, timeout=15
-        )
-        log(f"type={ft} 加协作者: {r.stdout[:400]}")
+    # 最终诊断：用 GET 看权限 API 是否可访问
+    log("--- GET 权限信息 ---")
+    r = subprocess.run(
+        ["curl", "-s", "-X", "GET",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members?type=docx",
+         "-H", f"Authorization: Bearer {token}"],
+        capture_output=True, text=True, timeout=15
+    )
+    log(f"GET members: {r.stdout[:500]}")
 
-    for ft in ["doc", "docx"]:
-        log(f"--- type={ft} 转让所有权 ---")
-        r = subprocess.run(
-            ["curl", "-s", "-X", "POST",
-             f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members/transfer_owner?type={ft}",
-             "-H", f"Authorization: Bearer {token}",
-             "-H", "Content-Type: application/json",
-             "-d", json.dumps({"member_type":"openid","member_id":"ou_7d8a6e6df7621556ce0d21922b676706ccs"})],
-            capture_output=True, text=True, timeout=15
-        )
-        log(f"type={ft} 转让所有权: {r.stdout[:400]}")
+    # 也试试最简单的添加方式：userid 类型的 member_id
+    log("--- POST 用 userid ---")
+    r2 = subprocess.run(
+        ["curl", "-s", "-X", "POST",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members?type=docx",
+         "-H", f"Authorization: Bearer {token}",
+         "-H", "Content-Type: application/json",
+         "-d", '{"member_id":"ou_7d8a6e6df7621556ce0d21922b676706ccs","member_type":"openid","perm":"edit"}'],
+        capture_output=True, text=True, timeout=15
+    )
+    log(f"POST userid: {r2.stdout[:500]}")
+    
+    log("--- POST 完整 body (去掉了 member_type) ---")
+    r3 = subprocess.run(
+        ["curl", "-s", "-X", "POST",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members?type=docx",
+         "-H", f"Authorization: Bearer {token}",
+         "-H", "Content-Type: application/json",
+         "-d", '{"member_id":"ou_7d8a6e6df7621556ce0d21922b676706ccs","perm":"edit"}'],
+        capture_output=True, text=True, timeout=15
+    )
+    log(f"POST no member_type: {r3.stdout[:500]}")
     return doc_url
 
 
