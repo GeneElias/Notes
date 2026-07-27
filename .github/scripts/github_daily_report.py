@@ -280,31 +280,50 @@ def push_to_feishu(markdown_content):
         file_token = doc_id
     log(f"使用 file_token: {file_token}")
 
-    # 用 curl 添加协作者（type=docx 指文件类型，member_type 放 body）
-    log("用 curl 添加协作者...")
-    payload = json.dumps({"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs", "perm": "full_access"})
-    curl_resp = subprocess.run(
+    # 测试多种参数组合
+    log("--- 测试 A: need_notification 放 body，perm=edit ---")
+    a_resp = subprocess.run(
+        ["curl", "-s", "-X", "POST",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members?type=docx",
+         "-H", f"Authorization: Bearer {token}",
+         "-H", "Content-Type: application/json",
+         "-d", json.dumps({"member_type":"openid","member_id":"ou_7d8a6e6df7621556ce0d21922b676706ccs","perm":"edit","need_notification":False})],
+        capture_output=True, text=True, timeout=15
+    )
+    log(f"A: {a_resp.stdout[:300]}")
+
+    log("--- 测试 B: need_notification 放 query，perm=full_access ---")
+    b_resp = subprocess.run(
         ["curl", "-s", "-X", "POST",
          f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members?type=docx&need_notification=false",
          "-H", f"Authorization: Bearer {token}",
          "-H", "Content-Type: application/json",
-         "-d", payload],
+         "-d", json.dumps({"member_type":"openid","member_id":"ou_7d8a6e6df7621556ce0d21922b676706ccs","perm":"full_access"})],
         capture_output=True, text=True, timeout=15
     )
-    log(f"curl 加协作者: {curl_resp.stdout[:500]}")
+    log(f"B: {b_resp.stdout[:300]}")
 
-    # 用 curl 转让所有权（同样 type=docx + member_type 放 body）
-    log("用 curl 转让所有权...")
-    payload2 = json.dumps({"member_type": "openid", "member_id": "ou_7d8a6e6df7621556ce0d21922b676706ccs"})
-    curl_resp2 = subprocess.run(
+    log("--- 测试 C: perm=view，最简版 ---")
+    c_resp = subprocess.run(
         ["curl", "-s", "-X", "POST",
-         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members/transfer_owner?type=docx&need_notification=false",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members?type=docx",
          "-H", f"Authorization: Bearer {token}",
          "-H", "Content-Type: application/json",
-         "-d", payload2],
+         "-d", json.dumps({"member_type":"openid","member_id":"ou_7d8a6e6df7621556ce0d21922b676706ccs","perm":"view"})],
         capture_output=True, text=True, timeout=15
     )
-    log(f"curl 转让所有权: {curl_resp2.stdout[:500]}")
+    log(f"C: {c_resp.stdout[:300]}")
+
+    log("--- 测试 D: transfer_owner 不带 need_notification ---")
+    d_resp = subprocess.run(
+        ["curl", "-s", "-X", "POST",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members/transfer_owner?type=docx",
+         "-H", f"Authorization: Bearer {token}",
+         "-H", "Content-Type: application/json",
+         "-d", json.dumps({"member_type":"openid","member_id":"ou_7d8a6e6df7621556ce0d21922b676706ccs"})],
+        capture_output=True, text=True, timeout=15
+    )
+    log(f"D: {d_resp.stdout[:300]}")
     return doc_url
 
 
