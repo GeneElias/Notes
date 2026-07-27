@@ -280,52 +280,29 @@ def push_to_feishu(markdown_content):
         file_token = doc_id
     log(f"使用 file_token: {file_token}")
 
-    # 尝试 perm 和 member_type 用数字值
-    log("--- 1. perm 用数字 2(=edit) ---")
-    r = subprocess.run(
-        ["curl", "-s", "-X", "POST",
-         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members?type=docx",
-         "-H", f"Authorization: Bearer {token}",
-         "-H", "Content-Type: application/json",
-         "-d", '{"member_type":"openid","member_id":"ou_7d8a6e6df7621556ce0d21922b676706ccs","perm":2}'],
-        capture_output=True, text=True, timeout=15
-    )
-    log(f"1: {r.stdout[:300]}")
-    
-    log("--- 2. member_type 用数字 1(=openid) ---")
-    r = subprocess.run(
-        ["curl", "-s", "-X", "POST",
-         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members?type=docx",
-         "-H", f"Authorization: Bearer {token}",
-         "-H", "Content-Type: application/json",
-         "-d", '{"member_type":1,"member_id":"ou_7d8a6e6df7621556ce0d21922b676706ccs","perm":"edit"}'],
-        capture_output=True, text=True, timeout=15
-    )
-    log(f"2: {r.stdout[:300]}")
-    
-    log("--- 3. PATCH public 改文档分享设置 ---")
+    # 用正确参数做 PATCH public（让文档公司内可编辑）
+    log("--- PATCH public 公司内可编辑 ---")
     r = subprocess.run(
         ["curl", "-s", "-X", "PATCH",
          f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/public?type=docx",
          "-H", f"Authorization: Bearer {token}",
          "-H", "Content-Type: application/json",
-         "-d", '{"link_share_entity":"company_read_write","security_entity":"anyone","external_access_entity":"open"}'],
+         "-d", '{"link_share_entity":"company_editable","security_entity":"anyone_can_view","external_access_entity":"open","invite_external":false}'],
         capture_output=True, text=True, timeout=15
     )
-    log(f"3 public: {r.stdout[:300]}")
+    log(f"PATCH public: {r.stdout[:500]}")
     
-    log("--- 4. POST 用成员邮箱（看是不是 openid 格式问题）---")
-    # 用 member_type=email 先简单测试 POST 是否通
+    # 也试不带 security_entity
+    log("--- PATCH public 最小参数 ---")
     r = subprocess.run(
-        ["curl", "-s", "-X", "POST",
-         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/members?type=docx",
+        ["curl", "-s", "-X", "PATCH",
+         f"https://open.feishu.cn/open-apis/drive/v1/permissions/{file_token}/public?type=docx",
          "-H", f"Authorization: Bearer {token}",
          "-H", "Content-Type: application/json",
-         "-d", '{"member_type":"email","member_id":"test@test.com","perm":"edit"}'],
+         "-d", '{"link_share_entity":"company_editable"}'],
         capture_output=True, text=True, timeout=15
     )
-    log(f"4 email: {r.stdout[:300]}")
-    return doc_url
+    log(f"PATCH public min: {r.stdout[:500]}")    return doc_url
 
 
 # ═══ 主流程 ═══
