@@ -82,7 +82,33 @@ def build_report(all_time, new_week, trending):
         else:
             s, l, d = "?", "?", ""
         lines.append(f"| {i} | **[{repo}](https://github.com/{repo})** | {s} | {l} | {d} |")
-    lines += ["", "---", "", "## 第三部分：趋势解读\n", "*报告基于全历史 Top 10 和本周新兴项目自动生成趋势分析，可根据热点动态补充。*\n", "---", "", "## 第四部分：语言分布统计\n"]
+    lines += ["", "---", "", "## 第三部分：趋势解读\n"]
+
+    # 实际趋势分析
+    all_items = all_time.get("items", [])[:10] if isinstance(all_time, dict) else []
+    new_items = new_week.get("items", [])[:15] if isinstance(new_week, dict) else []
+
+    def _trend_count(items, keywords):
+        return sum(1 for r in items if any(kw in ((r.get("description") or "") + " " + (r.get("full_name") or "")).lower() for kw in keywords))
+
+    ai_c = _trend_count(all_items + new_items, ["ai ", "llm", "agent", "gpt", "neural", "transformer", "language model", "rag", "embedding", "copilot", "openai", "machine learning"])
+    learn_c = _trend_count(all_items + new_items, ["learn", "tutorial", "awesome", "course", "guide", "resource", "roadmap"])
+    tool_c = _trend_count(all_items + new_items, ["cli", "terminal", "tool", "sdk", "framework", "api", "database", "engine", "compiler"])
+
+    trend_parts = []
+    if ai_c >= 3: trend_parts.append(f"AI/LLM 类项目 {ai_c} 个，是本周最活跃的方向")
+    if learn_c >= 3: trend_parts.append(f"学习资源类项目 {learn_c} 个，开发者对系统化学习材料需求持续旺盛")
+    if tool_c >= 3: trend_parts.append(f"开发者工具类 {tool_c} 个，基础设施工具仍为开源生态重要组成")
+
+    if trend_parts:
+        lines.append("本周 GitHub 热点分析：")
+        for tp in trend_parts:
+            lines.append(f"- {tp}")
+        lines.append("")
+    else:
+        lines.append("本周 GitHub 热点分布较为分散，各类型项目均有上榜。")
+
+    lines += ["", "---", "", "## 第四部分：语言分布统计\n"]
     lang_counts = {}
     for src in [all_time, new_week]:
         if isinstance(src, dict) and "items" in src:
@@ -246,7 +272,7 @@ def push_to_feishu(markdown_content):
                     "elements": [
                         {
                             "tag": "markdown",
-                            "content": f"**报告已更新**\n📅 {TODAY}\n\n👉 [查看完整文档]({doc_url})"
+                            "content": f"**报告已更新**\n📅 {TODAY}\n\n📄 [飞书文档]({doc_url})\n💻 [GitHub 报告](https://github.com/GeneElias/Notes/blob/main/{REPORT_FILE})"
                         },
                         {"tag": "hr"},
                         {"tag": "note", "elements": [{"tag": "plain_text", "content": "每日自动生成 · GitHub Actions"}]}
